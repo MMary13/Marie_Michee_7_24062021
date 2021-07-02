@@ -9,10 +9,22 @@ router.post('/signup', userCtrl.signup);
 //Route: POST login (/api/auth/login)
 router.post('/login', userCtrl.login);
 
+//Route: GET profil (/api/auth/profil)
+router.get('/profil',auth,userCtrl.getUserInfo);
+
+//Route: PUT (/api/auth/profil)
+router.put('/profil', auth, userCtrl.modifyUser);
+
+//Route: DELETE (/api/auth/profil)
+router.delete('/profil', auth, userCtrl.deleteUser);
+
+//Routes Admin-------------
+router.get('/admin/user/:id',auth,userCtrl.getUserInfo);
+
 //Route: PUT (/api/auth/:id)
-router.put('/:id', auth, userCtrl.modifyUser);
+router.put('/admin/user/:id', auth, userCtrl.modifyUser);
 
 //Route: DELETE (/api/auth/:id)
-router.delete('/:id', auth, userCtrl.deleteUser);
+router.delete('/admin/user/:id', auth, userCtrl.deleteUser);
 
 module.exports = router;
