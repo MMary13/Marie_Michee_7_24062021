@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const util = require('../middleware/util');
 
 //Signup User method, use bcrypt to encrypt password--------
 exports.signup = async function(req, res, next) {
@@ -9,68 +10,82 @@ exports.signup = async function(req, res, next) {
         bcrypt.hash(req.body.password, 10)
         .then(hash => {
             //Create new User and add to DB
-            console.log('Password hashed');
-            User.create({
-                firstName:req.body.firstName,
-                lastName:req.body.lastName,
-                mail:req.body.mail,
-                password:hash,
-                role_id:req.body.roleId
+            User.findOrCreate({
+                where: {firstname:req.body.firstName},
+                defaults:{
+                    firstName:req.body.firstName,
+                    lastName:req.body.lastName,
+                    mail:req.body.mail,
+                    password:hash,
+                    role_id:req.body.roleId
+                }
             })
-            .then(res.status(201).json({ message: 'Utilisateur créé !' }))
+            .then(([user, created]) => {
+                if(created) {
+                    res.status(201).json({ message: 'Utilisateur créé !' })
+                } else {
+                    res.status(403).json({ error: 'Un compte existe déjà pour cet email : '+user.mail })
+                }
+                
+            })
             .catch(error => res.status(500).json({ error }));
 
         })
-        .catch(error => res.status(500).json({ error }));
+        .catch(error => {
+            return res.status(500).json({ error })
+        });
     } 
 };
 
 //Login User method, check the password and give a token access if OK-----------------
 exports.login = async function(req, res, next) {
-    try {
-        const user = await User.findOne( {where:{ mail: req.body.mail }});
-        if(user === null) {
-            return res.status(401).json({ error: 'Utilisateur non trouvé !'});
-        } else {
-            bcrypt.compare(req.body.password,user.password)
-            .then(valid => {
-                if(!valid) {
-                    return res.status(401).json({ error: 'Mot de passe incorrect !'});
-                }
-                return res.status(200).json({
-                    userId: user.id,
-                    token: jwt.sign(
-                        {userId: user.id},
-                        'RANDOM_TOKEN_SECRET',
-                        {expiresIn: '24h'}
-                    )
-                });
-            })
-        }
-    } catch (error) {
-        return res.status(500).json({ error })
-    }
+        User.findOne( {where:{ mail: req.body.mail }})
+        .then(user => {
+            if(user === null) {
+                return res.status(401).json({ error: 'Utilisateur non trouvé !'});
+            } else {
+                bcrypt.compare(req.body.password,user.password)
+                .then(valid => {
+                    if(!valid) {
+                        return res.status(401).json({ error: 'Mot de passe incorrect !'});
+                    }
+                    return res.status(200).json({
+                        userId: user.id,
+                        token: jwt.sign(
+                            {userId: user.id},
+                            'RANDOM_TOKEN_SECRET',
+                            {expiresIn: '24h'}
+                        )
+                    });
+                })
+            }
+        })
+        .catch(error => {
+            return res.status(500).json({ error })
+        });
+   
 };
 
-exports.getUserInfo = async function (req, res, next) {
-    try {
+exports.getMyProfil = async function (req, res, next) {
         const token = req.headers.authorization.split(' ')[1];
         const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
-        console.log(decodedToken);
         const userId = decodedToken.userId;
-        const user = await User.findByPk(userId);
-        if(user === null) {
-            return res.status(401).json({ error: 'Utilisateur non trouvé !'});
-        } else {
-            return res.status(200).json({ user });
-        }
-    } catch (error) {
-        return res.status(500).json({ error });
-    }
+        console.log("USERID= "+userId);
+        User.findByPk(userId)
+        .then(user => {
+            if(user === null) {
+                return res.status(401).json({ error: 'Utilisateur non trouvé !'});
+            } else {
+                return res.status(200).json({ user });
+            }
+        })
+        .catch(error => {
+            return res.status(500).json({ error })
+        });
 };
 
 //PUT: update a user---------
-exports.modifyUser = (req, res, next) => {
+exports.modifyMyProfil = (req, res, next) => {
     if(userValidation(req.body,res)) {
         //Password encryption
         bcrypt.hash(req.body.password, 10)
@@ -85,22 +100,47 @@ exports.modifyUser = (req, res, next) => {
             });
         })
         .catch(error => {
-            return res.status(500).json({ error })});
+            return res.status(500).json({ error })
+        });
     } 
 };
 
 //DELETE: delete a user---------
-exports.deleteUser = async function (req, res, next) {
-    try {
+exports.deleteMyProfil = async function (req, res, next) {
         const token = req.headers.authorization.split(' ')[1];
         const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
         const userId = decodedToken.userId;
-        User.destroy({ where: { id:userId }});
-        return res.status(200).json( { message: "L'utilisateur a été supprimé"})
-    } catch (error) {
-        return res.status(500).json({ error });
-    }
+        User.destroy({ where: { id:userId }})
+        .then(result => {
+            return res.status(200).json( { message: "L'utilisateur a été supprimé"})
+        })
+        .catch(error => {
+            return res.status(500).json({ error })
+        });
 };
+
+//Functions for ADMIN routes---------------
+exports.getUserInfo = async function(req,res,next) {
+    const userId = req.body.id;
+    User.findByPk(userId)
+    .then(user => {
+        if(user === null) {
+            return res.status(401).json({ error: 'Utilisateur non trouvé !'});
+        } else {
+            return res.status(200).json({ user });
+        }
+    })
+    .catch(error => {
+        return res.status(500).json({ error })
+    });
+
+};
+
+exports.modifyUser = async function(req,res,next) {};
+
+exports.deleteUser = async function(req,res,next) {};
+
+//-------------------------------------------
 
 //Functions-------------------------------------------------------
 //User validation----------
@@ -117,10 +157,6 @@ function userValidation(user,res) {
         return false;
     }
 }
-
-//Functions pour Admin TO DO---------------
-
-//-------------------------------------------
 
 
 //Password validation-------

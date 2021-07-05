@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const userCtrl = require('../controllers/userCtrl');
 const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 
 //Route: POST signup (/api/auth/signup)
 router.post('/signup', userCtrl.signup);
@@ -10,21 +11,22 @@ router.post('/signup', userCtrl.signup);
 router.post('/login', userCtrl.login);
 
 //Route: GET profil (/api/auth/profil)
-router.get('/profil',auth,userCtrl.getUserInfo);
+router.get('/profil',auth,userCtrl.getMyProfil);
 
 //Route: PUT (/api/auth/profil)
-router.put('/profil', auth, userCtrl.modifyUser);
+router.put('/profil', auth, userCtrl.modifyMyProfil);
 
 //Route: DELETE (/api/auth/profil)
-router.delete('/profil', auth, userCtrl.deleteUser);
+router.delete('/profil', auth, userCtrl.deleteMyProfil);
 
-//Routes Admin-------------
-router.get('/admin/user/:id',auth,userCtrl.getUserInfo);
+//ADMIN Routes---------------------------
+//Route: GET (/api/auth/user/:id)
+router.get('/user/',auth, admin, userCtrl.getUserInfo);
 
-//Route: PUT (/api/auth/:id)
-router.put('/admin/user/:id', auth, userCtrl.modifyUser);
+//Route: PUT (/api/auth/user/:id)
+router.put('/user/:id', auth, admin, userCtrl.modifyUser);
 
-//Route: DELETE (/api/auth/:id)
-router.delete('/admin/user/:id', auth, userCtrl.deleteUser);
+//Route: DELETE (/api/auth/user/:id)
+router.delete('/user/:id', auth, admin, userCtrl.deleteUser);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const DataTypes = require('sequelize');
 const sequelize = require('../database');
-const Role = require('./Role');
+const bcrypt = require('bcrypt');
 
 const User = sequelize.define('User', {
   // Model attributes are defined here
@@ -44,5 +44,21 @@ console.log(User === sequelize.models.User); // true
 //Table creation if does not exist
 User.sync();
 console.log("The table for the User model has been created if not already existed");
+
+//Create or Find the possible Roles----
+bcrypt.hash('root', 10)
+.then(hash => {
+  User.findOrCreate(
+    {
+        where: {firstname:'ADMIN'},
+        defaults:{
+          firstName:'ADMIN',
+          lastName:'ADMIN',
+          mail: 'admin@admin.com',
+          password: hash,
+          role_id:2}
+    }
+  );
+})
 
 module.exports = sequelize.models.User;
