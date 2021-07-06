@@ -21,7 +21,7 @@ router.delete('/profil', auth, userCtrl.deleteMyProfil);
 
 //ADMIN Routes---------------------------
 //Route: GET (/api/auth/user/:id)
-router.get('/user/',auth, admin, userCtrl.getUserInfo);
+router.get('/user/:id',auth, admin, userCtrl.getUserInfo);
 
 //Route: PUT (/api/auth/user/:id)
 router.put('/user/:id', auth, admin, userCtrl.modifyUser);

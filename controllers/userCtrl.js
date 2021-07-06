@@ -29,7 +29,6 @@ exports.signup = async function(req, res, next) {
                 
             })
             .catch(error => res.status(500).json({ error }));
-
         })
         .catch(error => {
             return res.status(500).json({ error })
@@ -70,18 +69,7 @@ exports.getMyProfil = async function (req, res, next) {
         const token = req.headers.authorization.split(' ')[1];
         const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
         const userId = decodedToken.userId;
-        console.log("USERID= "+userId);
-        User.findByPk(userId)
-        .then(user => {
-            if(user === null) {
-                return res.status(401).json({ error: 'Utilisateur non trouvé !'});
-            } else {
-                return res.status(200).json({ user });
-            }
-        })
-        .catch(error => {
-            return res.status(500).json({ error })
-        });
+        findUserById(userId,res);
 };
 
 //PUT: update a user---------
@@ -91,13 +79,10 @@ exports.modifyMyProfil = (req, res, next) => {
         bcrypt.hash(req.body.password, 10)
         .then(hash => {
             //Create new User and add to DB
-            User.update({
-                lastName:req.body.lastName,
-            }, {where: { id:req.body.id }})
-            .then(result => res.status(200).json(result))
-            .catch(error => {
-                return res.status(500).json({ error })
-            });
+            const token = req.headers.authorization.split(' ')[1];
+            const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
+            const userId = decodedToken.userId;
+            updateUserById(userId,req.body,hash,res);
         })
         .catch(error => {
             return res.status(500).json({ error })
@@ -110,35 +95,32 @@ exports.deleteMyProfil = async function (req, res, next) {
         const token = req.headers.authorization.split(' ')[1];
         const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
         const userId = decodedToken.userId;
-        User.destroy({ where: { id:userId }})
-        .then(result => {
-            return res.status(200).json( { message: "L'utilisateur a été supprimé"})
-        })
-        .catch(error => {
-            return res.status(500).json({ error })
-        });
+        deleteUserById(userId,res);
 };
 
 //Functions for ADMIN routes---------------
 exports.getUserInfo = async function(req,res,next) {
-    const userId = req.body.id;
-    User.findByPk(userId)
-    .then(user => {
-        if(user === null) {
-            return res.status(401).json({ error: 'Utilisateur non trouvé !'});
-        } else {
-            return res.status(200).json({ user });
-        }
-    })
-    .catch(error => {
-        return res.status(500).json({ error })
-    });
-
+    const userId = req.params.id;
+    findUserById(userId,res);
 };
 
-exports.modifyUser = async function(req,res,next) {};
+exports.modifyUser = async function(req,res,next) {
+    if(userValidation(req.body,res)) {
+        //Password encryption
+        bcrypt.hash(req.body.password, 10)
+        .then(hash => {
+            //Create new User and add to DB
+            updateUserById(req.params.id,req.body,hash,res);
+        })
+        .catch(error => {
+            return res.status(500).json({ error })
+        });
+    } 
+};
 
-exports.deleteUser = async function(req,res,next) {};
+exports.deleteUser = async function(req,res,next) {
+    deleteUserById(req.params.id,res);
+};
 
 //-------------------------------------------
 
@@ -177,4 +159,46 @@ function emailValidation(email) {
     } else {
       return false;
     }
+}
+
+//Find a User by ID---------------------
+async function findUserById(id,res) {
+    User.findByPk(id)
+    .then(user => {
+        if(user === null) {
+            return res.status(401).json({ error: 'Utilisateur non trouvé !'});
+        } else {
+            return res.status(200).json({ user });
+        }
+    })
+    .catch(error => {
+        return res.status(500).json({ error })
+    });
+}
+
+//Update a User by ID-----------------
+async function updateUserById(id,body,hash,res) {
+    User.update({
+        lastName:body.lastName,
+        firstName:body.firstName,
+        mail:body.mail,
+        password:hash,
+        role_id:body.roleId}, {where: { id:id }})
+    .then(updatedRows => {
+        res.status(200).json({ message:'Profil mis à jour, lignes modifiées: '+updatedRows })
+    })
+    .catch(error => {
+        return res.status(500).json({ error })
+    });
+}
+
+//Delete User by ID-------------------
+async function deleteUserById(id,res) {
+    User.destroy({ where: { id:id }})
+        .then(deletedRows => {
+            return res.status(200).json( { message: 'Profil supprimé, nombre de lignes supprimées: '+deletedRows})
+        })
+        .catch(error => {
+            return res.status(500).json({ error })
+        });
 }
