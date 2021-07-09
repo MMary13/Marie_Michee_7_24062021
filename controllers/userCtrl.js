@@ -13,11 +13,9 @@ exports.signup = async function(req, res, next) {
             User.findOrCreate({
                 where: {firstname:req.body.firstName},
                 defaults:{
-                    firstName:req.body.firstName,
-                    lastName:req.body.lastName,
-                    mail:req.body.mail,
+                    ...req.body,
                     password:hash,
-                    role_id:req.body.roleId
+
                 }
             })
             .then(([user, created]) => {
@@ -28,7 +26,10 @@ exports.signup = async function(req, res, next) {
                 }
                 
             })
-            .catch(error => res.status(500).json({ error }));
+            .catch(error => {
+                console.log(error);
+                res.status(500).json({ error })
+            });
         })
         .catch(error => {
             return res.status(500).json({ error })
@@ -127,17 +128,24 @@ exports.deleteUser = async function(req,res,next) {
 //Functions-------------------------------------------------------
 //User validation----------
 function userValidation(user,res) {
-    if(emailValidation(user.mail)){
-        if (passwordValidation(user.password)) {
-            return true;
-        } else {
-            res.status(400).json({error : 'Votre mot de passe doit contenir au minimum 8 caractères, 1 majuscule, 1 minuscule, un chiffre et un caractère spécial.'})
+    console.log(user);
+    if((user.firstName!=null) && (user.lastName!=null)) {
+        if(emailValidation(user.mail)){
+            if (passwordValidation(user.password)) {
+                return true;
+            } else {
+                res.status(400).json({error : 'Votre mot de passe doit contenir au minimum 8 caractères, 1 majuscule, 1 minuscule, un chiffre et un caractère spécial.'})
+                return false;
+            }
+        }else {
+            res.status(400).json({error : "Votre email est incorrect, il doit être de la forme machin@bidule.truc"})
             return false;
         }
-    }else {
-        res.status(400).json({error : "Votre email n'est pas correct, il doit être de la forme machin@bidule.truc"})
+    } else {
+        res.status(400).json({error : "Votre Nom ou votre Prénom est manquant"});
         return false;
     }
+    
 }
 
 
@@ -179,11 +187,9 @@ async function findUserById(id,res) {
 //Update a User by ID-----------------
 async function updateUserById(id,body,hash,res) {
     User.update({
-        lastName:body.lastName,
-        firstName:body.firstName,
-        mail:body.mail,
-        password:hash,
-        role_id:body.roleId}, {where: { id:id }})
+        ...body,
+        password:hash
+    }, {where: { id:id }})
     .then(updatedRows => {
         res.status(200).json({ message:'Profil mis à jour, lignes modifiées: '+updatedRows })
     })

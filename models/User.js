@@ -38,12 +38,17 @@ const User = sequelize.define('User', {
   }
 });
 
+
+
 // `sequelize.define` also returns the model
 console.log(User === sequelize.models.User); // true
 
 //Table creation if does not exist
 User.sync();
 console.log("The table for the User model has been created if not already existed");
+
+// User.hasMany(User, {as: 'friends'});
+// User.belongsTo(User,{foreignKey:'friend_id', as: 'friend'});
 
 //Create or Find the possible Roles----
 bcrypt.hash('root', 10)
