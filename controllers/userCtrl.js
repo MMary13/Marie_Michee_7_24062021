@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const util = require('../middleware/util');
+const GET_USERID_FROM_TOKEN = require('../middleware/util');
 
 //Signup User method, use bcrypt to encrypt password--------
 exports.signup = async function(req, res, next) {
@@ -28,11 +28,11 @@ exports.signup = async function(req, res, next) {
             })
             .catch(error => {
                 console.log(error);
-                res.status(500).json({ error })
+                res.status(500).json({ "error": error.message })
             });
         })
         .catch(error => {
-            return res.status(500).json({ error })
+            return res.status(500).json({ "error": error.message })
         });
     } 
 };
@@ -61,16 +61,15 @@ exports.login = async function(req, res, next) {
             }
         })
         .catch(error => {
-            return res.status(500).json({ error })
+            return res.status(500).json({ "error": error.message })
         });
    
 };
 
 exports.getMyProfil = async function (req, res, next) {
-        const token = req.headers.authorization.split(' ')[1];
-        const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
-        const userId = decodedToken.userId;
-        findUserById(userId,res);
+    const userId = GET_USERID_FROM_TOKEN(req);
+    console.log(userId);
+    findUserById(userId,res);
 };
 
 //PUT: update a user---------
@@ -80,23 +79,19 @@ exports.modifyMyProfil = (req, res, next) => {
         bcrypt.hash(req.body.password, 10)
         .then(hash => {
             //Create new User and add to DB
-            const token = req.headers.authorization.split(' ')[1];
-            const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
-            const userId = decodedToken.userId;
+            const userId = GET_USERID_FROM_TOKEN(req);
             updateUserById(userId,req.body,hash,res);
         })
         .catch(error => {
-            return res.status(500).json({ error })
+            return res.status(500).json({ "error": error.message })
         });
     } 
 };
 
 //DELETE: delete a user---------
 exports.deleteMyProfil = async function (req, res, next) {
-        const token = req.headers.authorization.split(' ')[1];
-        const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
-        const userId = decodedToken.userId;
-        deleteUserById(userId,res);
+    const userId = GET_USERID_FROM_TOKEN(req);
+    deleteUserById(userId,res);
 };
 
 //Functions for ADMIN routes---------------
@@ -114,7 +109,7 @@ exports.modifyUser = async function(req,res,next) {
             updateUserById(req.params.id,req.body,hash,res);
         })
         .catch(error => {
-            return res.status(500).json({ error })
+            return res.status(500).json({ "error": error.message })
         });
     } 
 };
@@ -180,7 +175,7 @@ async function findUserById(id,res) {
         }
     })
     .catch(error => {
-        return res.status(500).json({ error })
+        return res.status(500).json({ "error": error.message })
     });
 }
 
@@ -194,7 +189,7 @@ async function updateUserById(id,body,hash,res) {
         res.status(200).json({ message:'Profil mis à jour, lignes modifiées: '+updatedRows })
     })
     .catch(error => {
-        return res.status(500).json({ error })
+        return res.status(500).json({ "error": error.message })
     });
 }
 
@@ -205,6 +200,6 @@ async function deleteUserById(id,res) {
             return res.status(200).json( { message: 'Profil supprimé, nombre de lignes supprimées: '+deletedRows})
         })
         .catch(error => {
-            return res.status(500).json({ error })
+            return res.status(500).json({ "error": error.message })
         });
 }

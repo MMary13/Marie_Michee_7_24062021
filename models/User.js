@@ -1,6 +1,7 @@
 const DataTypes = require('sequelize');
 const sequelize = require('../database');
 const bcrypt = require('bcrypt');
+const UsersHasFriends = require('./UsersHasFriends');
 
 const User = sequelize.define('User', {
   // Model attributes are defined here
@@ -47,8 +48,7 @@ console.log(User === sequelize.models.User); // true
 User.sync();
 console.log("The table for the User model has been created if not already existed");
 
-// User.hasMany(User, {as: 'friends'});
-// User.belongsTo(User,{foreignKey:'friend_id', as: 'friend'});
+//User.belongsToMany(User,{through: UsersHasFriends, as:'Friends', foreignKey: 'friendId'});
 
 //Create or Find the possible Roles----
 bcrypt.hash('root', 10)
