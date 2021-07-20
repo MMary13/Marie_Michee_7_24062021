@@ -10,7 +10,7 @@ module.exports = (req, res, next) => {
         const userId = decodedToken.userId;
         User.findByPk(userId)
         .then(user => {
-            if(user.role_id === 2) {
+            if(user.userRole === 'ADMIN') {
                 console.log('Vous êtes ADMIN');
                 next();
             } else {

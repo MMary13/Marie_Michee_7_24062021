@@ -1,5 +1,6 @@
 const DataTypes = require('sequelize');
 const sequelize = require('../database');
+const Comment = require('./Comment');
 
 const Post = sequelize.define('Post', {
   // Model attributes are defined here
@@ -9,15 +10,19 @@ const Post = sequelize.define('Post', {
     primaryKey: true,
     autoIncrement: true
   },
-  content: {
+  title: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  file: {
+  content: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  imageUrl: {
     type: DataTypes.STRING,
     allowNull: true
   },
-  comments: {
+  link: {
     type: DataTypes.STRING,
     allowNull: true
   },
@@ -39,7 +44,7 @@ const Post = sequelize.define('Post', {
   }
 });
 
-
+Post.hasMany(Comment, {as: 'comments'});
 
 // `sequelize.define` also returns the model
 console.log(Post === sequelize.models.Post); // true

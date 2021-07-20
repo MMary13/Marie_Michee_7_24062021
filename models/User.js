@@ -28,13 +28,13 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  role_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
+  userRole: {
+    type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 1,
+    defaultValue: 'USER',
     references: {
         model: 'Roles',
-        key: 'id'
+        key: 'name'
     }
   }
 });
@@ -51,7 +51,7 @@ console.log("The table for the User model has been created if not already existe
 //User.belongsToMany(User,{through: UsersHasFriends, as:'Friends', foreignKey: 'friendId'});
 
 //Create or Find the possible Roles----
-bcrypt.hash('root', 10)
+bcrypt.hash('Root2021!', 10)
 .then(hash => {
   User.findOrCreate(
     {
@@ -61,7 +61,7 @@ bcrypt.hash('root', 10)
           lastName:'ADMIN',
           mail: 'admin@admin.com',
           password: hash,
-          role_id:2}
+          userRole: 'ADMIN'}
     }
   );
 })

@@ -23,6 +23,9 @@ router.delete('/profil', auth, userCtrl.deleteMyProfil);
 //Route: GET (/api/auth/user/:id)
 router.get('/user/:id',auth, admin, userCtrl.getUserInfo);
 
+//Route: GET (/api/auth/user/)
+router.get('/user/',auth, admin, userCtrl.getAllUsers);
+
 //Route: PUT (/api/auth/user/:id)
 router.put('/user/:id', auth, admin, userCtrl.modifyUser);
 

@@ -2,6 +2,7 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const GET_USERID_FROM_TOKEN = require('../middleware/util');
+const operator = require('sequelize').Op;
 
 //Signup User method, use bcrypt to encrypt password--------
 exports.signup = async function(req, res, next) {
@@ -95,11 +96,25 @@ exports.deleteMyProfil = async function (req, res, next) {
 };
 
 //Functions for ADMIN routes---------------
+//GET: Get User by Id---------------------------
 exports.getUserInfo = async function(req,res,next) {
     const userId = req.params.id;
     findUserById(userId,res);
 };
 
+//GET: Get all Users-------------------------
+exports.getAllUsers = async function(req,res,next) {
+    const adminId = GET_USERID_FROM_TOKEN(req);
+    User.findAll({ where: { id: { [operator.ne]: adminId } }})
+    .then(users => {
+        return res.status(200).json({ users });
+    })
+    .catch(error => {
+        return res.status(500).json( { "error": error.message });
+    })
+};
+
+//PUT: Modify a User-------------------------
 exports.modifyUser = async function(req,res,next) {
     if(userValidation(req.body,res)) {
         //Password encryption
@@ -114,6 +129,7 @@ exports.modifyUser = async function(req,res,next) {
     } 
 };
 
+//DELETE: Delete a User---------------------
 exports.deleteUser = async function(req,res,next) {
     deleteUserById(req.params.id,res);
 };
@@ -175,7 +191,7 @@ async function findUserById(id,res) {
         }
     })
     .catch(error => {
-        return res.status(500).json({ "error": error.message })
+        return res.status(500).json({ "error": error.message });
     });
 }
 

@@ -1,26 +1,13 @@
 const express = require('express');
 const app = express();
 const userRoutes = require('./routes/userRouter');
-const mysql = require('mysql2');
+const postRoutes = require('./routes/postRouter');
+//const mysql = require('mysql2');
 const { Sequelize } = require('sequelize')
 require('dotenv').config();
 // const path = require('path');
 
 // //Database connexion-------------------
-// db = mysql.createConnection({
-//     host: process.env.DB_HOST,
-//     user: process.env.DB_USER,
-//     password:process.env.DB_PASSWORD,
-//     database: process.env.DB_NAME,
-// });
-
-// db.connect(function(err) {
-//     if(err) {
-//         console.error("Connexion DB échouée : "+err);
-//     } else {
-//         console.log("Connexion DB réussie!")
-//     }
-// })
 const sequelize = new Sequelize(process.env.DB_NAME,process.env.DB_USER,process.env.DB_PASSWORD, {
     host: process.env.DB_HOST,
     dialect: 'mysql'
@@ -29,9 +16,9 @@ const sequelize = new Sequelize(process.env.DB_NAME,process.env.DB_USER,process.
 try {
     sequelize.authenticate();
     console.log('Connection has been established successfully.');
-  } catch (error) {
+} catch (error) {
     console.error('Unable to connect to the database:', error);
-  }
+}
   module.exports = sequelize;
 
 //Middleware CORS, to add correct headers--------------
@@ -52,4 +39,5 @@ app.use((req,res,next) => {
 app.use(express.json());
 // app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use('/api/auth', userRoutes);
+app.use('/api/post', postRoutes);
 module.exports = app;

@@ -1,5 +1,6 @@
 const DataTypes = require('sequelize');
 const sequelize = require('../database');
+const Post = require('./Post');
 
 const Comment = sequelize.define('Comment', {
   // Model attributes are defined here
@@ -21,14 +22,6 @@ const Comment = sequelize.define('Comment', {
     type: DataTypes.INTEGER,
     allowNull: true
   },
-  user_id: {
-    type: DataTypes.BIGINT.UNSIGNED,
-    allowNull: false,
-    references: {
-        model: 'Users',
-        key: 'id'
-    }
-  },
   post_id: {
     type: DataTypes.BIGINT.UNSIGNED,
     allowNull: false,
@@ -36,9 +29,16 @@ const Comment = sequelize.define('Comment', {
         model: 'Posts',
         key: 'id'
     }
+  },
+  user_id: {
+    type: DataTypes.BIGINT.UNSIGNED,
+    allowNull: false,
+    references: {
+        model: 'Users',
+        key: 'id'
+    }
   }
 });
-
 
 
 // `sequelize.define` also returns the model
