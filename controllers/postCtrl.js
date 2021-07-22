@@ -46,33 +46,43 @@ exports.getAllPosts = async function (req,res,next) {
 
 //Update a Post method-------------
 exports.modifyPost = async function (req,res,next) {
-    if(postValidation(req.body,res)) {
-        const userId = GET_USERID_FROM_TOKEN(req);
-        const postObject = req.file ?
-            {
-            ...req.body,
-            user_id: userId,
-            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-            } : {...req.body, user_id: userId};
-        Post.update(postObject, {where: { id:req.params.id }})
-            .then(updatedRows => {
-                res.status(200).json({ message:'Publication mise à jour, lignes modifiées: '+updatedRows })
-            })
-            .catch(error => {
-                return res.status(500).json({ "error": error.message })
-            });
+    if(authorizedToModifyThisPost(req)) {
+        if(postValidation(req.body,res)) {
+            const userId = GET_USERID_FROM_TOKEN(req);
+            const postObject = req.file ?
+                {
+                ...req.body,
+                user_id: userId,
+                imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+                } : {...req.body, user_id: userId};
+            Post.update(postObject, {where: { id:req.params.id }})
+                .then(updatedRows => {
+                    res.status(200).json({ message:'Publication mise à jour, lignes modifiées: '+updatedRows })
+                })
+                .catch(error => {
+                    return res.status(500).json({ "error": error.message })
+                });
+        }
+    } else {
+        return res.status(500).json({ "error": "Vous n'êtes pas authorisé à modifier ou supprimer cet article" });
     }
+    
 };
 
 //Delete a Post method-------------
 exports.deleteOnePost = async function (req,res,next) {
-    Post.destroy({ where: { id:req.params.id }})
+    if(authorizedToModifyThisPost(req)) {
+        Post.destroy({ where: { id:req.params.id }})
         .then(deletedRows => {
-            return res.status(200).json( { message: 'Publication supprimée, nombre de lignes supprimées: '+deletedRows})
+            return res.status(200).json( { message: 'Publication supprimée, nombre de lignes supprimées: '+deletedRows});
         })
         .catch(error => {
-            return res.status(500).json({ "error": error.message })
+            return res.status(500).json({ "error": error.message });
         });
+    } else {
+        return res.status(500).json({ "error": "Vous n'êtes pas authorisé à modifier ou supprimer cet article" });
+    }
+
 };
 
 
@@ -90,6 +100,19 @@ function postValidation(post,res) {
     } else {
         res.status(400).json({error : "Votre Publication n'a pas de titre !"});
         return false;
-    }
-    
+    }  
 }
+
+//Functions----------------
+//Check if User is authorize to update/delete the post----
+function authorizedToModifyThisPost(req) {
+    const userId = GET_USERID_FROM_TOKEN(req);
+    Post.findByPk(req.params.id)
+    .then(post => {
+        return post.user_id === userId;
+    })
+    .catch(error => {
+        console.error(error);
+        return false;
+    })
+};
