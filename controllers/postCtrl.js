@@ -105,7 +105,7 @@ function postValidation(post,res) {
 
 //Functions----------------
 //Check if User is authorize to update/delete the post----
-function authorizedToModifyThisPost(req) {
+async function authorizedToModifyThisPost(req) {
     const userId = GET_USERID_FROM_TOKEN(req);
     Post.findByPk(req.params.id)
     .then(post => {

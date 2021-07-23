@@ -1,21 +1,23 @@
 const GET_USERID_FROM_TOKEN = require('../middleware/util');
 const Comment = require('../models/Comment');
+const Post = require('../models/Post');
 
 
 //Create Comment method--------
 exports.newComment = async function(req, res, next) {
     if(commentValidation(req.body,res)) {
         const userId = GET_USERID_FROM_TOKEN(req);
-        Post.create({
-            ...req.body,
-            user_id: userId
-        })
-        .then(() => {
-            res.status(201).json({ message: 'Commentaire créé !' })
-        })
-        .catch(error => {
-            return res.status(500).json({ "error": error.message })
-        });
+            Comment.create({
+                ...req.body,
+                user_id: userId
+            })
+            .then(() => {
+                res.status(201).json({ message: 'Commentaire créé !' })
+            })
+            .catch(error => {
+                console.log("tata");
+                return res.status(500).json({ "error": error.message })
+            });  
     }
 };
 
@@ -26,13 +28,13 @@ exports.getOneComment = async function (req,res,next) {
         return res.status(200).json({ comment });
     })
     .catch(error => {
-        return res.status(500).json({ "error": error.message });
+        return res.status(500).json({ "error": error });
     });
 };
 
 //Get All Comments method--------------
 exports.getAllComments = async function (req,res,next) {
-    Comments.findAll({ order: [ ['createdAt', 'DESC'] ] })
+    Comment.findAll({ order: [ ['createdAt', 'DESC'] ] })
     .then(comments => {
         return res.status(200).json({ comments });
     })
@@ -44,8 +46,8 @@ exports.getAllComments = async function (req,res,next) {
 //Get All Comments of A Post method--------------
 exports.getAllCommentsOfAPost = async function (req,res,next) {
     Comment.findAll({where: { post_id:req.params.id }},{ order: [ ['createdAt', 'DESC'] ] })
-    .then(posts => {
-        return res.status(200).json({ posts });
+    .then(comments => {
+        return res.status(200).json({ comments });
     })
     .catch(error => {
         return res.status(500).json({ "error": error.message });
@@ -57,7 +59,7 @@ exports.modifyComment = async function (req,res,next) {
     if(authorizedToModifyThisComment(req)) {
         if(commentValidation(req.body,res)) {
             const userId = GET_USERID_FROM_TOKEN(req);
-            Post.update({
+            Comment.update({
                 ...req.body,
                 user_id: userId
                 }, {where: { id:req.params.id }})
@@ -96,7 +98,12 @@ exports.deleteOneComment = async function (req,res,next) {
 function commentValidation(comment,res) {
     console.log(comment);
     if(comment.content!=null) {
-        return false;
+        if(comment.post_id!=null) {
+            return true;
+        } else {
+            res.status(400).json({error : "Votre commentaire doit être rattaché à un article !"});
+            return false;
+        } 
     } else {
         res.status(400).json({error : "Votre commentaire n'a pas de contenu !"});
         return false;
@@ -105,11 +112,11 @@ function commentValidation(comment,res) {
 
 //Functions----------------
 //Check if User is authorize to update/delete the post----
-function authorizedToModifyThisComment(req) {
+async function authorizedToModifyThisComment(req) {
     const userId = GET_USERID_FROM_TOKEN(req);
     Comment.findByPk(req.params.id)
     .then(comment => {
-        return comment.user_id === userId;
+        return comment.user_id == userId;
     })
     .catch(error => {
         console.error(error);

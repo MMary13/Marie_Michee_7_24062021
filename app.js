@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const userRoutes = require('./routes/userRouter');
 const postRoutes = require('./routes/postRouter');
-//const mysql = require('mysql2');
+const commentRoutes = require('./routes/commentRouter');
 const { Sequelize } = require('sequelize')
 require('dotenv').config();
 // const path = require('path');
@@ -40,4 +40,5 @@ app.use(express.json());
 // app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use('/api/auth', userRoutes);
 app.use('/api/post', postRoutes);
+app.use('/api/comment', commentRoutes);
 module.exports = app;

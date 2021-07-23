@@ -1,6 +1,6 @@
 const DataTypes = require('sequelize');
 const sequelize = require('../database');
-const Post = require('./Post');
+
 
 const Comment = sequelize.define('Comment', {
   // Model attributes are defined here
@@ -40,12 +40,8 @@ const Comment = sequelize.define('Comment', {
   }
 });
 
-
 // `sequelize.define` also returns the model
 console.log(Comment === sequelize.models.Comment); // true
 
-//Table creation if does not exist
-Comment.sync();
-console.log("The table for the Comment model has been created if not already existed");
 
 module.exports = sequelize.models.Comment;
