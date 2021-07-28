@@ -105,8 +105,16 @@ function postValidation(post,res) {
 
 //Functions----------------
 //Check if User is authorize to update/delete the post----
-async function authorizedToModifyThisPost(req) {
+function authorizedToModifyThisPost(req) {
     const userId = GET_USERID_FROM_TOKEN(req);
+    if(isMyPost(userId,req) || isAdmin(userId)) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+async function isMyPost(userId,req) {
     Post.findByPk(req.params.id)
     .then(post => {
         return post.user_id === userId;
@@ -115,4 +123,19 @@ async function authorizedToModifyThisPost(req) {
         console.error(error);
         return false;
     })
-};
+}
+
+async function isAdmin(userId,req) {
+    User.findByPk(userId)
+    .then(user => {
+        if(user.userRole == 'ADMIN') {
+            return true;
+        } else {
+            return false;
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        return false;
+    })
+}
