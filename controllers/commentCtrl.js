@@ -1,6 +1,6 @@
 const GET_USERID_FROM_TOKEN = require('../middleware/util');
 const Comment = require('../models/Comment');
-const Post = require('../models/Post');
+const User = require('../models/User');
 
 
 //Create Comment method--------
@@ -114,9 +114,33 @@ function commentValidation(comment,res) {
 //Check if User is authorize to update/delete the post----
 async function authorizedToModifyThisComment(req) {
     const userId = GET_USERID_FROM_TOKEN(req);
+    if(isMyComment(userId,req) || isAdmin(userId)) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+
+async function isMyComment(userId,req) {
     Comment.findByPk(req.params.id)
     .then(comment => {
         return comment.user_id == userId;
+    })
+    .catch(error => {
+        console.error(error);
+        return false;
+    })
+}
+
+async function isAdmin(userId,req) {
+    User.findByPk(userId)
+    .then(user => {
+        if(user.userRole == 'ADMIN') {
+            return true;
+        } else {
+            return false;
+        }
     })
     .catch(error => {
         console.error(error);

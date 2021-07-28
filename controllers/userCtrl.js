@@ -16,7 +16,6 @@ exports.signup = async function(req, res, next) {
                 defaults:{
                     ...req.body,
                     password:hash,
-
                 }
             })
             .then(([user, created]) => {

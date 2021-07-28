@@ -5,7 +5,7 @@ const postRoutes = require('./routes/postRouter');
 const commentRoutes = require('./routes/commentRouter');
 const { Sequelize } = require('sequelize')
 require('dotenv').config();
-// const path = require('path');
+const path = require('path');
 
 // //Database connexion-------------------
 const sequelize = new Sequelize(process.env.DB_NAME,process.env.DB_USER,process.env.DB_PASSWORD, {
@@ -37,7 +37,7 @@ app.use((req,res,next) => {
 
 
 app.use(express.json());
-// app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use('/api/auth', userRoutes);
 app.use('/api/post', postRoutes);
 app.use('/api/comment', commentRoutes);
